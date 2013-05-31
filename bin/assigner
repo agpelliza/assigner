@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require 'assigner'
+
+class Item
+
+  def initialize(attributes = {})
+    @properties = attributes
+
+    attributes.each do |key, value|
+      instance_variable_set "@#{key}".to_sym, value 
+    end
+
+    self.class.send :define_method, 'to_original_input' do
+      output = ""
+      @properties.each do |key, value|
+        output << ", " unless output.empty?
+        output << "#{key}: #{value}"
+      end
+      output
+    end
+  end
+end
+
+input = File.open(ARGV[0])
+
+items = []
+input.each_line do |line|
+   line.strip!
+   items << Item.new(eval "{#{line}}") unless line.empty?
+end
+
+Assigner.assign_each_other!(items)
+
+items.each do |item|
+  puts "#{item.to_original_input}  >>>>>  #{item.assignation.to_original_input}"
+end
